@@ -1,0 +1,1622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SENTRY — Crime Risk Analysis & Safe Travel Recommendation System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   SENTRY — Crime Risk Analysis & Safe Travel Recommendation
+   ========================================================= */
+
+:root {
+  /* Color */
+  --bg: #060a16;
+  --bg-elev: #0b1226;
+  --glass: rgba(255, 255, 255, 0.045);
+  --glass-strong: rgba(255, 255, 255, 0.07);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --blue: #5b8def;
+  --blue-soft: #5b8def33;
+  --purple: #9b5cf6;
+  --purple-soft: #9b5cf633;
+  --gradient: linear-gradient(135deg, #5b8def 0%, #9b5cf6 100%);
+  --green: #34d399;
+  --amber: #f5b942;
+  --red: #f2586b;
+  --text: #e7ebf5;
+  --muted: #8a93ab;
+  --muted-2: #5c6480;
+
+  /* Type */
+  --font-display: "Space Grotesk", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Layout */
+  --sidebar-w: 264px;
+  --radius-lg: 22px;
+  --radius-md: 16px;
+  --radius-sm: 10px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
+
+h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0.01em; }
+p { margin: 0; color: var(--muted); line-height: 1.6; }
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; }
+
+::selection { background: var(--purple-soft); color: var(--text); }
+
+/* =================== BACKGROUND FX =================== */
+
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 90%);
+  pointer-events: none;
+}
+
+.bg-glow {
+  position: fixed;
+  width: 640px;
+  height: 640px;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.22;
+  pointer-events: none;
+  z-index: 0;
+}
+.bg-glow--blue { background: var(--blue); top: -220px; left: -160px; }
+.bg-glow--purple { background: var(--purple); bottom: -260px; right: -180px; }
+
+/* =================== LAYOUT SHELL =================== */
+
+.app {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  min-height: 100vh;
+}
+
+/* =================== SIDEBAR =================== */
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  border-right: 1px solid var(--glass-border);
+  background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.01));
+  backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  padding: 26px 18px;
+  gap: 30px;
+}
+
+.sidebar__brand { display: flex; align-items: center; gap: 12px; padding: 0 6px; }
+.brand__mark { width: 38px; height: 38px; flex-shrink: 0; }
+.brand__text { display: flex; flex-direction: column; line-height: 1.15; }
+.brand__name { font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; letter-spacing: 0.04em; }
+.brand__sub { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+.sidebar__nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.nav__label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted-2); padding: 4px 12px 10px; }
+
+.nav__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  border-radius: var(--radius-sm);
+  font-size: 0.92rem;
+  font-weight: 500;
+  transition: background 0.2s var(--ease), color 0.2s var(--ease);
+  text-align: left;
+  position: relative;
+}
+.nav__icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+.nav__item:hover { background: var(--glass); color: var(--text); }
+.nav__item.is-active {
+  background: linear-gradient(90deg, var(--blue-soft), var(--purple-soft));
+  color: var(--text);
+}
+.nav__item.is-active::before {
+  content: "";
+  position: absolute;
+  left: -18px;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 4px;
+  background: var(--gradient);
+}
+
+.sidebar__status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+}
+.status__dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px rgba(52,211,153,0.15); animation: pulse-dot 2s infinite; flex-shrink: 0; }
+.status__text { display: flex; flex-direction: column; font-size: 0.75rem; color: var(--text); line-height: 1.3; }
+.status__text small { color: var(--muted-2); font-size: 0.68rem; }
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(52,211,153,0.15); }
+  50% { box-shadow: 0 0 0 7px rgba(52,211,153,0.05); }
+}
+
+/* =================== MOBILE TOPBAR =================== */
+
+.topbar {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: rgba(6,10,22,0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--glass-border);
+}
+.topbar__brand { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.05em; }
+.topbar__spacer { flex: 1; }
+.topbar__menu { display: flex; flex-direction: column; gap: 4px; background: none; border: none; padding: 6px; }
+.topbar__menu span { width: 20px; height: 2px; background: var(--text); border-radius: 2px; }
+
+/* =================== MAIN =================== */
+
+.main { padding: 34px 42px 60px; max-width: 1320px; }
+
+.page { display: none; animation: fade-up 0.5s var(--ease); }
+.page.is-active { display: block; }
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.page-head { margin-bottom: 28px; }
+.page-head h2 { font-size: 1.7rem; margin-bottom: 6px; }
+.page-head p { font-size: 0.95rem; max-width: 620px; }
+
+/* =================== HERO =================== */
+
+.hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  align-items: center;
+  gap: 20px;
+  padding: 56px 48px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  background:
+    radial-gradient(ellipse 120% 100% at 100% 0%, var(--purple-soft), transparent 60%),
+    radial-gradient(ellipse 100% 100% at 0% 100%, var(--blue-soft), transparent 60%),
+    var(--glass);
+  overflow: hidden;
+  margin-bottom: 26px;
+}
+
+.eyebrow {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: var(--blue);
+  background: rgba(91,141,239,0.12);
+  border: 1px solid rgba(91,141,239,0.25);
+  padding: 6px 12px;
+  border-radius: 30px;
+  margin-bottom: 20px;
+}
+
+.hero__title { font-size: 2.6rem; line-height: 1.12; font-weight: 700; margin-bottom: 18px; }
+.grad-text { background: var(--gradient); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero__desc { max-width: 520px; font-size: 1rem; margin-bottom: 30px; }
+.hero__actions { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 30px; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 22px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  font-weight: 600;
+  font-size: 0.92rem;
+  transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease), background 0.25s var(--ease), border-color 0.25s var(--ease);
+}
+.btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.btn--primary { background: var(--gradient); color: #050810; box-shadow: 0 10px 30px -8px rgba(91,141,239,0.55); }
+.btn--primary:hover { transform: translateY(-2px); box-shadow: 0 16px 34px -8px rgba(155,92,246,0.55); }
+.btn--ghost { background: var(--glass); color: var(--text); border-color: var(--glass-border); }
+.btn--ghost:hover { background: var(--glass-strong); border-color: rgba(255,255,255,0.18); }
+.btn--block { width: 100%; justify-content: center; margin-top: 20px; }
+
+.ticker {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  color: var(--muted-2);
+  height: 18px;
+  overflow: hidden;
+  position: relative;
+  white-space: nowrap;
+}
+.ticker span { display: block; animation: ticker-scroll 14s linear infinite; }
+
+@keyframes ticker-scroll {
+  0% { transform: translateY(0); opacity: 1;}
+  8% { opacity: 1; }
+  12% { opacity: 0; }
+  13% { transform: translateY(-18px); }
+  100% { transform: translateY(-18px); opacity: 0; }
+}
+
+/* radar */
+.hero__radar { position: relative; width: 100%; aspect-ratio: 1; max-width: 300px; margin: 0 auto; }
+.radar__ring { position: absolute; inset: 0; border: 1px solid rgba(91,141,239,0.25); border-radius: 50%; }
+.radar__ring--2 { inset: 16%; border-color: rgba(91,141,239,0.2); }
+.radar__ring--3 { inset: 32%; border-color: rgba(155,92,246,0.25); }
+.radar__sweep {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(91,141,239,0.35), transparent 35%);
+  animation: sweep 4s linear infinite;
+}
+@keyframes sweep { to { transform: rotate(360deg); } }
+
+.radar__blip {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 0 0 rgba(242,88,107,0.6);
+  animation: blip 3s ease-out infinite;
+  animation-delay: var(--delay);
+}
+@keyframes blip {
+  0% { box-shadow: 0 0 0 0 rgba(242,88,107,0.5); opacity: 1;}
+  70% { box-shadow: 0 0 0 14px rgba(242,88,107,0); opacity: 0.6;}
+  100% { box-shadow: 0 0 0 14px rgba(242,88,107,0); opacity: 1;}
+}
+
+/* =================== STAT GRID =================== */
+
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 26px; }
+.stat-grid--compact { margin-bottom: 28px; }
+
+.stat-card {
+  padding: 22px;
+  border-radius: var(--radius-md);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(14px);
+  transition: transform 0.3s var(--ease), border-color 0.3s var(--ease);
+}
+.stat-card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.18); }
+
+.stat-card__icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+.stat-card__icon svg { width: 19px; height: 19px; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.icon--blue { background: rgba(91,141,239,0.15); color: var(--blue); }
+.icon--purple { background: rgba(155,92,246,0.15); color: var(--purple); }
+.icon--red { background: rgba(242,88,107,0.15); color: var(--red); }
+.icon--green { background: rgba(52,211,153,0.15); color: var(--green); }
+
+.stat-card__value { font-family: var(--font-mono); font-size: 1.7rem; font-weight: 700; margin-bottom: 4px; }
+.stat-card__value--text { font-size: 1.25rem; }
+.stat-card__label { font-size: 0.82rem; color: var(--muted); }
+
+/* =================== PANEL ROW (dashboard) =================== */
+
+.panel-row { display: grid; grid-template-columns: 1.5fr 1fr; gap: 18px; }
+
+.glass-card {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  backdrop-filter: blur(14px);
+}
+.glass-card h3 { font-size: 1.1rem; margin-bottom: 12px; }
+
+.intro-card p { margin-bottom: 20px; font-size: 0.9rem; }
+.mini-steps { display: flex; flex-direction: column; gap: 16px; }
+.mini-step { display: flex; gap: 12px; align-items: flex-start; }
+.mini-step__dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+.dot--blue { background: var(--blue); }
+.dot--purple { background: var(--purple); }
+.dot--green { background: var(--green); }
+.mini-step strong { font-size: 0.9rem; }
+.mini-step p { font-size: 0.82rem; margin-top: 2px; }
+
+.quick-card .muted { font-size: 0.85rem; margin-bottom: 18px; }
+
+/* =================== FORM ELEMENTS =================== */
+
+.field-label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted-2);
+  margin: 16px 0 8px;
+}
+.field-label:first-of-type { margin-top: 0; }
+
+.select {
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--glass-border);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%238a93ab' stroke-width='2'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
+}
+.select:hover { border-color: rgba(255,255,255,0.2); }
+.select:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+.form-hint {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(91,141,239,0.08);
+  border: 1px solid rgba(91,141,239,0.18);
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.form-hint svg { width: 16px; height: 16px; flex-shrink: 0; stroke: var(--blue); fill: none; stroke-width: 1.8; margin-top: 1px; }
+
+/* =================== GRID 2 (form + result) =================== */
+
+.grid-2 { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 20px; align-items: start; }
+
+.result-card { min-height: 380px; display: flex; align-items: center; justify-content: center; }
+.result-empty { display: flex; flex-direction: column; align-items: center; gap: 14px; color: var(--muted-2); text-align: center; padding: 40px 20px; }
+.result-empty svg { width: 44px; height: 44px; fill: none; stroke: currentColor; stroke-width: 1.4; opacity: 0.6; }
+.result-empty p { font-size: 0.88rem; color: var(--muted-2); }
+
+.result-body { width: 100%; animation: fade-up 0.4s var(--ease); }
+
+/* =================== RISK RESULT =================== */
+
+.risk-top { display: flex; align-items: center; gap: 22px; margin-bottom: 26px; }
+
+.risk-badge {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.03);
+}
+.risk-badge__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 4px solid var(--muted-2);
+  transition: border-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
+}
+.risk-badge__level {
+  position: relative;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.risk-badge.level-low .risk-badge__ring { border-color: var(--green); box-shadow: 0 0 22px -4px rgba(52,211,153,0.6); }
+.risk-badge.level-low .risk-badge__level { color: var(--green); }
+.risk-badge.level-medium .risk-badge__ring { border-color: var(--amber); box-shadow: 0 0 22px -4px rgba(245,185,66,0.6); }
+.risk-badge.level-medium .risk-badge__level { color: var(--amber); }
+.risk-badge.level-high .risk-badge__ring { border-color: var(--red); box-shadow: 0 0 22px -4px rgba(242,88,107,0.6); }
+.risk-badge.level-high .risk-badge__level { color: var(--red); }
+
+.risk-top__meta { display: flex; flex-direction: column; gap: 4px; }
+.risk-top__district { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; }
+.risk-top__slot { font-size: 0.85rem; color: var(--muted); font-family: var(--font-mono); }
+
+.metric-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+.metric-box {
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.metric-box__label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted-2); }
+.metric-box__value { font-family: var(--font-mono); font-size: 1.7rem; font-weight: 700; }
+.metric-box__sub { font-size: 0.72rem; color: var(--muted-2); }
+
+.score-bar { height: 8px; border-radius: 20px; background: rgba(255,255,255,0.06); overflow: hidden; margin-bottom: 24px; }
+.score-bar__fill { height: 100%; width: 0%; border-radius: 20px; background: var(--gradient); transition: width 0.8s var(--ease); }
+
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.chip {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--glass-border);
+  color: var(--muted);
+}
+
+/* =================== TRAVEL RESULT =================== */
+
+.travel-verdict { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--glass-border); }
+.travel-verdict__badge {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 8px 14px;
+  border-radius: 30px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.travel-verdict__badge.level-low { background: rgba(52,211,153,0.15); color: var(--green); }
+.travel-verdict__badge.level-medium { background: rgba(245,185,66,0.15); color: var(--amber); }
+.travel-verdict__badge.level-high { background: rgba(242,88,107,0.15); color: var(--red); }
+.travel-verdict p { font-size: 0.92rem; color: var(--text); }
+
+.travel-block { margin-bottom: 22px; }
+.tip-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.tip-list li {
+  position: relative;
+  padding-left: 24px;
+  font-size: 0.88rem;
+  color: var(--text);
+}
+.tip-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+  background: var(--gradient);
+}
+
+.travel-split { display: grid; grid-template-columns: 1fr 1.3fr; gap: 20px; }
+.alt-slot {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--blue);
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(91,141,239,0.08);
+  border: 1px solid rgba(91,141,239,0.2);
+}
+.travel-advice p { font-size: 0.85rem; }
+
+/* =================== CHART GRID =================== */
+
+.chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.chart-card--wide { grid-column: 1 / -1; }
+.chart-card__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.chart-card__head h3 { font-size: 1rem; }
+
+/* vertical bars (crime by district) */
+.bar-chart--v { display: flex; align-items: flex-end; gap: 10px; height: 220px; padding-top: 10px; }
+.bar-v { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; height: 100%; justify-content: flex-end; }
+.bar-v__fill {
+  width: 100%;
+  max-width: 26px;
+  border-radius: 6px 6px 2px 2px;
+  background: var(--gradient);
+  transition: height 1s var(--ease);
+  height: 0;
+}
+.bar-v__label { font-size: 0.65rem; color: var(--muted-2); font-family: var(--font-mono); writing-mode: vertical-rl; transform: rotate(180deg); height: 60px; }
+.bar-v__value { font-size: 0.68rem; color: var(--muted); font-family: var(--font-mono); }
+
+/* horizontal bars (crime by time slot) */
+.bar-chart--h { display: flex; flex-direction: column; gap: 16px; }
+.bar-h { display: grid; grid-template-columns: 110px 1fr 56px; align-items: center; gap: 12px; }
+.bar-h__label { font-size: 0.8rem; color: var(--muted); }
+.bar-h__track { height: 10px; border-radius: 20px; background: rgba(255,255,255,0.06); overflow: hidden; }
+.bar-h__fill { height: 100%; width: 0%; border-radius: 20px; background: var(--gradient); transition: width 1s var(--ease); }
+.bar-h__value { font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); text-align: right; }
+
+/* donut */
+.donut-wrap { display: flex; align-items: center; gap: 24px; }
+.donut { width: 160px; height: 160px; flex-shrink: 0; }
+.donut-legend { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.legend-item { display: flex; align-items: center; gap: 10px; font-size: 0.8rem; color: var(--muted); }
+.legend-item__dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.legend-item strong { color: var(--text); font-family: var(--font-mono); margin-left: auto; }
+
+/* line chart */
+.line-chart { width: 100%; height: 200px; }
+
+/* heatmap */
+.heatmap { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 14px; }
+.heat-cell {
+  aspect-ratio: 2.2;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: rgba(255,255,255,0.75);
+  cursor: default;
+  transition: transform 0.2s var(--ease);
+}
+.heat-cell:hover { transform: scale(1.06); }
+.heatmap-scale { display: flex; align-items: center; gap: 10px; font-size: 0.7rem; color: var(--muted-2); font-family: var(--font-mono); }
+.heatmap-scale__bar { flex: 1; height: 8px; border-radius: 20px; background: linear-gradient(90deg, #1c2942, var(--blue), var(--purple), var(--red)); }
+
+/* =================== ABOUT =================== */
+
+.about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.about-card__icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+.about-card__icon svg { width: 20px; height: 20px; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.about-card h3 { margin-bottom: 10px; }
+.about-card p { font-size: 0.9rem; }
+
+.tech-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.tech-badges span {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  padding: 7px 13px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--glass-border);
+  color: var(--text);
+}
+
+/* =================== FOOTER =================== */
+
+.footer { position: relative; z-index: 1; border-top: 1px solid var(--glass-border); padding: 28px 42px; }
+.footer__inner { max-width: 1320px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+.footer__brand { display: flex; flex-direction: column; gap: 4px; }
+.footer__brand .brand__name { font-size: 1rem; }
+.footer__links { display: flex; gap: 20px; }
+.footer__links a { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--muted); transition: color 0.2s var(--ease); }
+.footer__links a:hover { color: var(--text); }
+.footer__links svg { width: 18px; height: 18px; fill: currentColor; }
+.footer__dev { font-size: 0.82rem; color: var(--muted-2); }
+.muted { color: var(--muted); }
+
+/* =================== RESPONSIVE =================== */
+
+@media (max-width: 1100px) {
+  .hero { grid-template-columns: 1fr; text-align: left; padding: 40px 32px; }
+  .hero__radar { max-width: 220px; margin-top: 20px; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .panel-row, .grid-2, .about-grid { grid-template-columns: 1fr; }
+  .chart-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 860px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0;
+    width: 240px;
+    transform: translateX(-100%);
+    transition: transform 0.3s var(--ease);
+    z-index: 30;
+    box-shadow: 20px 0 60px rgba(0,0,0,0.4);
+  }
+  .sidebar.is-open { transform: translateX(0); }
+  .topbar { display: flex; }
+  .main { padding: 24px 18px 50px; }
+  .hero__title { font-size: 1.9rem; }
+  .footer { padding: 24px 18px; }
+  .footer__inner { flex-direction: column; align-items: flex-start; }
+}
+
+@media (max-width: 560px) {
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+  .travel-split { grid-template-columns: 1fr; }
+  .metric-row { grid-template-columns: 1fr 1fr; }
+  .heatmap { grid-template-columns: repeat(3, 1fr); }
+  .hero { padding: 30px 20px; }
+}
+
+/* overlay for mobile sidebar */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 25;
+}
+.sidebar-overlay.is-active { display: block; }
+
+</style>
+</head>
+<body>
+
+<!-- Background scanner grid -->
+<div class="bg-grid" aria-hidden="true"></div>
+<div class="bg-glow bg-glow--blue" aria-hidden="true"></div>
+<div class="bg-glow bg-glow--purple" aria-hidden="true"></div>
+
+<div class="app">
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__brand">
+      <div class="brand__mark">
+        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="20" cy="20" r="18" stroke="url(#g1)" stroke-width="2"/>
+          <circle cx="20" cy="20" r="4" fill="url(#g1)"/>
+          <path d="M20 4V10" stroke="url(#g1)" stroke-width="2" stroke-linecap="round"/>
+          <path d="M20 30V36" stroke="url(#g1)" stroke-width="2" stroke-linecap="round"/>
+          <path d="M4 20H10" stroke="url(#g1)" stroke-width="2" stroke-linecap="round"/>
+          <path d="M30 20H36" stroke="url(#g1)" stroke-width="2" stroke-linecap="round"/>
+          <defs>
+            <linearGradient id="g1" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#5B8DEF"/>
+              <stop offset="1" stop-color="#9B5CF6"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="brand__text">
+        <span class="brand__name">SENTRY</span>
+        <span class="brand__sub">Crime Intelligence</span>
+      </div>
+    </div>
+
+    <nav class="sidebar__nav">
+      <span class="nav__label">Navigate</span>
+      <button class="nav__item is-active" data-page="dashboard">
+        <svg class="nav__icon" viewBox="0 0 24 24"><path d="M3 13h4v8H3zM10 3h4v18h-4zM17 8h4v13h-4z"/></svg>
+        <span>Dashboard</span>
+      </button>
+      <button class="nav__item" data-page="risk-analysis">
+        <svg class="nav__icon" viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <span>Risk Analysis</span>
+      </button>
+      <button class="nav__item" data-page="safe-travel">
+        <svg class="nav__icon" viewBox="0 0 24 24"><path d="M12 21s-7-5.33-7-11a7 7 0 0 1 14 0c0 5.67-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+        <span>Safe Travel</span>
+      </button>
+      <button class="nav__item" data-page="analytics">
+        <svg class="nav__icon" viewBox="0 0 24 24"><path d="M4 19V9M11 19V4M18 19v-6"/></svg>
+        <span>Analytics</span>
+      </button>
+      <button class="nav__item" data-page="about">
+        <svg class="nav__icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
+        <span>About Project</span>
+      </button>
+    </nav>
+
+    <div class="sidebar__status">
+      <div class="status__dot"></div>
+      <div class="status__text">
+        <span>Dataset connected</span>
+        <small>Chicago Crime Data · 2024–2026</small>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===================== MOBILE TOPBAR ===================== -->
+  <header class="topbar">
+    <button class="topbar__menu" id="menuToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="topbar__brand">SENTRY</div>
+    <div class="topbar__spacer"></div>
+  </header>
+
+  <!-- ===================== MAIN CONTENT ===================== -->
+  <main class="main">
+
+    <!-- ============ PAGE: DASHBOARD / LANDING ============ -->
+    <section class="page is-active" id="page-dashboard">
+
+      <div class="hero">
+        <div class="hero__radar" aria-hidden="true">
+          <div class="radar__ring radar__ring--1"></div>
+          <div class="radar__ring radar__ring--2"></div>
+          <div class="radar__ring radar__ring--3"></div>
+          <div class="radar__sweep"></div>
+          <span class="radar__blip" style="--x:30%; --y:40%; --delay:0s"></span>
+          <span class="radar__blip" style="--x:65%; --y:25%; --delay:1.2s"></span>
+          <span class="radar__blip" style="--x:50%; --y:70%; --delay:2.1s"></span>
+          <span class="radar__blip" style="--x:75%; --y:60%; --delay:0.6s"></span>
+        </div>
+
+        <div class="hero__content">
+          <span class="eyebrow">Chicago Crime Dataset · Predictive Safety Intelligence</span>
+          <h1 class="hero__title">
+            Crime Risk Analysis <span class="grad-text">&amp; Safe Travel</span> Recommendation System
+          </h1>
+          <p class="hero__desc">
+            SENTRY reads years of Chicago incident records to score every district by risk,
+            surface the safest travel windows, and turn raw crime data into a decision you can
+            act on before you leave the house.
+          </p>
+          <div class="hero__actions">
+            <button class="btn btn--primary" data-goto="risk-analysis">
+              Start Analysis
+              <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+            <button class="btn btn--ghost" data-goto="about">How it works</button>
+          </div>
+
+          <div class="ticker" id="ticker" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-card__icon icon--blue">
+            <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 4v16"/></svg>
+          </div>
+          <div class="stat-card__value" data-count="262000">0</div>
+          <div class="stat-card__label">Total Crimes Logged</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__icon icon--purple">
+            <svg viewBox="0 0 24 24"><path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-6h6v6"/></svg>
+          </div>
+          <div class="stat-card__value" data-count="22">0</div>
+          <div class="stat-card__label">Police Districts Covered</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__icon icon--red">
+            <svg viewBox="0 0 24 24"><path d="M12 2 2 22h20L12 2z"/><path d="M12 10v5M12 18h.01"/></svg>
+          </div>
+          <div class="stat-card__value stat-card__value--text">Englewood</div>
+          <div class="stat-card__label">Highest Risk District</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__icon icon--green">
+            <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+          </div>
+          <div class="stat-card__value stat-card__value--text">Jefferson Park</div>
+          <div class="stat-card__label">Safest District</div>
+        </div>
+      </div>
+
+      <div class="panel-row">
+        <div class="glass-card intro-card">
+          <h3>What SENTRY does</h3>
+          <p>Every incident record is cleaned, time-binned, and scored against district-level
+          historical frequency. The result is a live risk model you can query by district and
+          time slot — before you plan a route, not after.</p>
+          <div class="mini-steps">
+            <div class="mini-step">
+              <span class="mini-step__dot dot--blue"></span>
+              <div><strong>Score a district</strong><p>Pick a district and time slot to get an instant risk grade.</p></div>
+            </div>
+            <div class="mini-step">
+              <span class="mini-step__dot dot--purple"></span>
+              <div><strong>Get a safer route</strong><p>SENTRY suggests the safest nearby time window.</p></div>
+            </div>
+            <div class="mini-step">
+              <span class="mini-step__dot dot--green"></span>
+              <div><strong>See the full picture</strong><p>Break down crime by type, time and trend citywide.</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="glass-card quick-card">
+          <h3>Jump in</h3>
+          <p class="muted">Run a risk check on any district right now.</p>
+          <label class="field-label">District</label>
+          <select id="quickDistrict" class="select"></select>
+          <label class="field-label">Time slot</label>
+          <select id="quickTimeSlot" class="select"></select>
+          <button class="btn btn--primary btn--block" id="quickAnalyzeBtn">Analyze Risk</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PAGE: RISK ANALYSIS ============ -->
+    <section class="page" id="page-risk-analysis">
+      <div class="page-head">
+        <h2>Crime Risk Analysis</h2>
+        <p>Select a district and time slot to generate a live risk profile from historical incident data.</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="glass-card form-card">
+          <h3>Query parameters</h3>
+          <label class="field-label">District</label>
+          <select id="riskDistrict" class="select"></select>
+
+          <label class="field-label">Time Slot</label>
+          <select id="riskTimeSlot" class="select"></select>
+
+          <button class="btn btn--primary btn--block" id="analyzeRiskBtn">
+            Analyze Risk
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+
+          <div class="form-hint">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+            <span>Risk is computed from binned incident counts, crime severity weighting, and time-of-day frequency for the selected district.</span>
+          </div>
+        </div>
+
+        <div class="glass-card result-card" id="riskResultCard">
+          <div class="result-empty" id="riskEmptyState">
+            <svg viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            <p>Run an analysis to see the risk profile here.</p>
+          </div>
+
+          <div class="result-body" id="riskResultBody" hidden>
+            <div class="risk-top">
+              <div class="risk-badge" id="riskBadge">
+                <span class="risk-badge__level" id="riskLevelText">—</span>
+                <span class="risk-badge__ring"></span>
+              </div>
+              <div class="risk-top__meta">
+                <span class="risk-top__district" id="riskDistrictName">—</span>
+                <span class="risk-top__slot" id="riskSlotName">—</span>
+              </div>
+            </div>
+
+            <div class="metric-row">
+              <div class="metric-box">
+                <span class="metric-box__label">Crime Count</span>
+                <span class="metric-box__value" id="riskCrimeCount">—</span>
+                <span class="metric-box__sub">reported incidents / yr</span>
+              </div>
+              <div class="metric-box">
+                <span class="metric-box__label">Safety Score</span>
+                <span class="metric-box__value" id="riskSafetyScore">—</span>
+                <span class="metric-box__sub">out of 100</span>
+              </div>
+            </div>
+
+            <div class="score-bar">
+              <div class="score-bar__fill" id="riskScoreFill"></div>
+            </div>
+
+            <div class="top-crimes">
+              <span class="field-label">Most reported crime types here</span>
+              <div class="chip-row" id="riskTopCrimes"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PAGE: SAFE TRAVEL ============ -->
+    <section class="page" id="page-safe-travel">
+      <div class="page-head">
+        <h2>Safe Travel Recommendation</h2>
+        <p>Get a tailored travel recommendation with safer alternative time windows and precautions.</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="glass-card form-card">
+          <h3>Trip details</h3>
+          <label class="field-label">District</label>
+          <select id="travelDistrict" class="select"></select>
+
+          <label class="field-label">Time Slot</label>
+          <select id="travelTimeSlot" class="select"></select>
+
+          <button class="btn btn--primary btn--block" id="getRecommendationBtn">
+            Get Recommendation
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+
+        <div class="glass-card result-card" id="travelResultCard">
+          <div class="result-empty" id="travelEmptyState">
+            <svg viewBox="0 0 24 24"><path d="M12 21s-7-5.33-7-11a7 7 0 0 1 14 0c0 5.67-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+            <p>Enter trip details to get a safe travel recommendation.</p>
+          </div>
+
+          <div class="result-body" id="travelResultBody" hidden>
+            <div class="travel-verdict" id="travelVerdict">
+              <span class="travel-verdict__badge" id="travelVerdictBadge">—</span>
+              <p id="travelVerdictText">—</p>
+            </div>
+
+            <div class="travel-block">
+              <span class="field-label">Safety tips</span>
+              <ul class="tip-list" id="travelTips"></ul>
+            </div>
+
+            <div class="travel-split">
+              <div class="travel-alt">
+                <span class="field-label">Alternative safe time slot</span>
+                <div class="alt-slot" id="travelAltSlot">—</div>
+              </div>
+              <div class="travel-advice">
+                <span class="field-label">Travel advice</span>
+                <p id="travelAdvice">—</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PAGE: ANALYTICS ============ -->
+    <section class="page" id="page-analytics">
+      <div class="page-head">
+        <h2>Citywide Analytics</h2>
+        <p>Aggregated view of the full Chicago crime dataset across districts, time and crime type.</p>
+      </div>
+
+      <div class="stat-grid stat-grid--compact">
+        <div class="stat-card">
+          <div class="stat-card__icon icon--blue"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg></div>
+          <div class="stat-card__value" data-count="262453">0</div>
+          <div class="stat-card__label">Total Crimes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__icon icon--purple"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg></div>
+          <div class="stat-card__value" data-count="22">0</div>
+          <div class="stat-card__label">Total Districts</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__icon icon--red"><svg viewBox="0 0 24 24"><path d="M12 2 2 22h20z"/></svg></div>
+          <div class="stat-card__value stat-card__value--text">Englewood</div>
+          <div class="stat-card__label">Most Dangerous District</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__icon icon--green"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <div class="stat-card__value stat-card__value--text">Jefferson Park</div>
+          <div class="stat-card__label">Safest District</div>
+        </div>
+      </div>
+
+      <div class="chart-grid">
+        <div class="glass-card chart-card">
+          <div class="chart-card__head">
+            <h3>Crime by District</h3>
+            <span class="chip">Top 10</span>
+          </div>
+          <div class="bar-chart bar-chart--v" id="chartByDistrict"></div>
+        </div>
+
+        <div class="glass-card chart-card">
+          <div class="chart-card__head">
+            <h3>Crime by Time Slot</h3>
+          </div>
+          <div class="bar-chart bar-chart--h" id="chartByTimeSlot"></div>
+        </div>
+
+        <div class="glass-card chart-card">
+          <div class="chart-card__head">
+            <h3>Crime by Type</h3>
+          </div>
+          <div class="donut-wrap">
+            <svg id="chartByType" viewBox="0 0 160 160" class="donut"></svg>
+            <div class="donut-legend" id="chartByTypeLegend"></div>
+          </div>
+        </div>
+
+        <div class="glass-card chart-card chart-card--wide">
+          <div class="chart-card__head">
+            <h3>Monthly Crime Trend</h3>
+            <span class="chip">Last 12 months</span>
+          </div>
+          <svg id="chartTrend" viewBox="0 0 600 200" class="line-chart" preserveAspectRatio="none"></svg>
+        </div>
+
+        <div class="glass-card chart-card chart-card--wide">
+          <div class="chart-card__head">
+            <h3>District × Time Risk Heatmap</h3>
+            <span class="chip">Relative intensity</span>
+          </div>
+          <div class="heatmap" id="heatmap"></div>
+          <div class="heatmap-scale">
+            <span>Low</span>
+            <div class="heatmap-scale__bar"></div>
+            <span>High</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PAGE: ABOUT ============ -->
+    <section class="page" id="page-about">
+      <div class="page-head">
+        <h2>About This Project</h2>
+        <p>Why SENTRY exists, what powers it, and where it goes next.</p>
+      </div>
+
+      <div class="about-grid">
+        <div class="glass-card about-card">
+          <div class="about-card__icon icon--blue"><svg viewBox="0 0 24 24"><path d="M12 2 2 22h20z"/><path d="M12 10v5M12 18h.01"/></svg></div>
+          <h3>Objective</h3>
+          <p>Turn raw Chicago crime records into a practical safety tool: score every district
+          and time window by risk, and translate that score into a plain-language travel
+          recommendation someone can actually use.</p>
+        </div>
+
+        <div class="glass-card about-card">
+          <div class="about-card__icon icon--purple"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 4v16"/></svg></div>
+          <h3>Dataset Used</h3>
+          <p>City of Chicago public crime dataset — incident-level records including district,
+          date and time, crime type, and location, cleaned and time-binned into five daily
+          slots for analysis.</p>
+        </div>
+
+        <div class="glass-card about-card">
+          <div class="about-card__icon icon--green"><svg viewBox="0 0 24 24"><path d="m8 6 4-4 4 4M8 18l4 4 4-4"/><path d="M4 12h16"/></svg></div>
+          <h3>Technologies</h3>
+          <div class="tech-badges">
+            <span>Python</span>
+            <span>Pandas</span>
+            <span>NumPy</span>
+            <span>Matplotlib</span>
+            <span>Seaborn</span>
+            <span>Scikit-learn</span>
+            <span>HTML5</span>
+            <span>CSS3</span>
+            <span>JavaScript</span>
+          </div>
+        </div>
+
+        <div class="glass-card about-card">
+          <div class="about-card__icon icon--red"><svg viewBox="0 0 24 24"><path d="M13 2 3 14h7l-1 8 11-14h-7l1-6z"/></svg></div>
+          <h3>Future Scope</h3>
+          <p>Live API ingestion for real-time scoring, GPS-based route risk mapping, a mobile
+          companion app, and a predictive model that forecasts risk ahead of time instead of
+          only reporting on history.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer class="footer">
+  <div class="footer__inner">
+    <div class="footer__brand">
+      <span class="brand__name">SENTRY</span>
+      <span class="muted">Crime Risk Analysis &amp; Safe Travel Recommendation System</span>
+    </div>
+    <div class="footer__links">
+      <a href="https://github.com/" target="_blank" rel="noopener" aria-label="GitHub">
+        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-3.16 19.5c.5.1.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.9-1.29 2.74-1.02 2.74-1.02.56 1.38.21 2.4.1 2.65.65.7 1.03 1.59 1.03 2.68 0 3.84-2.35 4.68-4.58 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2z"/></svg>
+        <span>GitHub</span>
+      </a>
+      <a href="https://linkedin.com/" target="_blank" rel="noopener" aria-label="LinkedIn">
+        <svg viewBox="0 0 24 24"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM10 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.77-1.95 4.03 0 4.78 2.55 4.78 5.86V21h-4v-5.6c0-1.34-.02-3.06-1.87-3.06-1.87 0-2.15 1.45-2.15 2.96V21h-4z"/></svg>
+        <span>LinkedIn</span>
+      </a>
+    </div>
+    <div class="footer__dev">
+      Built by <strong>Your Name</strong> · Data Analytics Project
+    </div>
+  </div>
+</footer>
+
+<script>
+/* =========================================================
+   SENTRY — Crime Risk Analysis & Safe Travel Recommendation
+   Frontend logic. Replace the DATA / analyzeRisk() functions
+   with real API calls to your trained model / backend.
+   ========================================================= */
+
+(function () {
+  "use strict";
+
+  /* ---------------- MOCK DATA (swap with real dataset outputs) ---------------- */
+
+  const DISTRICTS = [
+    { id: 1, name: "District 1 — Central" },
+    { id: 2, name: "District 2 — Wentworth" },
+    { id: 3, name: "District 3 — Grand Crossing" },
+    { id: 4, name: "District 4 — South Chicago" },
+    { id: 5, name: "District 5 — Calumet" },
+    { id: 6, name: "District 6 — Gresham" },
+    { id: 7, name: "District 7 — Englewood" },
+    { id: 8, name: "District 8 — Chicago Lawn" },
+    { id: 9, name: "District 9 — Deering" },
+    { id: 10, name: "District 10 — Ogden" },
+    { id: 11, name: "District 11 — Harrison" },
+    { id: 12, name: "District 12 — Near West" },
+    { id: 14, name: "District 14 — Shakespeare" },
+    { id: 15, name: "District 15 — Austin" },
+    { id: 16, name: "District 16 — Jefferson Park" },
+    { id: 17, name: "District 17 — Albany Park" },
+    { id: 18, name: "District 18 — Near North" },
+    { id: 19, name: "District 19 — Town Hall" },
+    { id: 20, name: "District 20 — Lincoln" },
+    { id: 22, name: "District 22 — Morgan Park" },
+    { id: 24, name: "District 24 — Rogers Park" },
+    { id: 25, name: "District 25 — Grand Central" },
+  ];
+
+  const TIME_SLOTS = [
+    { id: "early-morning", name: "Early Morning (12AM–6AM)" },
+    { id: "morning", name: "Morning (6AM–12PM)" },
+    { id: "afternoon", name: "Afternoon (12PM–4PM)" },
+    { id: "evening", name: "Evening (4PM–8PM)" },
+    { id: "night", name: "Night (8PM–12AM)" },
+  ];
+
+  const CRIME_TYPES = [
+    "Theft", "Battery", "Criminal Damage", "Narcotics", "Assault",
+    "Burglary", "Robbery", "Motor Vehicle Theft", "Deceptive Practice", "Weapons Violation",
+  ];
+
+  const SCANNER_FEED = [
+    "10:42 · Theft reported — District 18",
+    "10:44 · Patrol dispatched — District 7",
+    "10:47 · Battery incident logged — District 15",
+    "10:51 · Risk score refreshed — District 11",
+    "10:55 · Vehicle theft flagged — District 4",
+    "10:58 · Area clear — District 16",
+  ];
+
+  /* ---------------- Deterministic pseudo-random helpers ---------------- */
+  // Ensures the same district+timeslot always produces the same "analysis"
+  // instead of jumping around randomly on every click.
+
+  function seedFromString(str) {
+    let h = 2166136261;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return () => {
+      h ^= h << 13; h ^= h >>> 17; h ^= h << 5;
+      return ((h >>> 0) / 4294967295);
+    };
+  }
+
+  function rangeFromSeed(rand, min, max) {
+    return Math.floor(min + rand() * (max - min));
+  }
+
+  /* District base danger index (0-1), fixed so results feel coherent */
+  const DISTRICT_DANGER = {};
+  DISTRICTS.forEach((d) => {
+    const r = seedFromString("danger-" + d.id);
+    DISTRICT_DANGER[d.id] = r();
+  });
+
+  const TIME_MULTIPLIER = {
+    "early-morning": 0.55,
+    "morning": 0.35,
+    "afternoon": 0.5,
+    "evening": 0.8,
+    "night": 1.0,
+  };
+
+  function computeRisk(districtId, slotId) {
+    const rand = seedFromString(districtId + "-" + slotId);
+    const base = DISTRICT_DANGER[districtId];
+    const mult = TIME_MULTIPLIER[slotId];
+    const composite = Math.min(1, base * 0.7 + mult * 0.5 + (rand() - 0.5) * 0.08);
+
+    const crimeCount = Math.round(300 + composite * 2600 + rand() * 200);
+    const safetyScore = Math.round((1 - composite) * 100);
+
+    let level = "low";
+    if (composite > 0.66) level = "high";
+    else if (composite > 0.38) level = "medium";
+
+    const shuffled = [...CRIME_TYPES].sort(() => rand() - 0.5);
+    const topCrimes = shuffled.slice(0, 4);
+
+    return { composite, crimeCount, safetyScore, level, topCrimes };
+  }
+
+  const LEVEL_LABEL = { low: "Low Risk", medium: "Moderate Risk", high: "High Risk" };
+
+  const SAFETY_TIPS = {
+    low: [
+      "Standard precautions apply — stay aware of your surroundings.",
+      "Well-lit, populated routes are readily available at this time.",
+      "Public transit and rideshare access is reliable in this window.",
+    ],
+    medium: [
+      "Stick to main roads and avoid unlit side streets.",
+      "Keep valuables out of sight while walking or waiting for transit.",
+      "Travel with a companion where possible during this time slot.",
+    ],
+    high: [
+      "Avoid non-essential travel through this area during this window.",
+      "If travel is required, use a direct rideshare rather than walking.",
+      "Share your live location with someone you trust for the duration of the trip.",
+      "Avoid displaying phones, jewelry, or cash in public view.",
+    ],
+  };
+
+  const TRAVEL_ADVICE = {
+    low: "Conditions are favorable. This is one of the calmer windows for this district based on historical incident data.",
+    medium: "Exercise normal urban caution. Incident frequency is moderate but manageable with basic awareness.",
+    high: "Historical incident density is elevated for this district and time. Consider the alternative window below or a direct transit option.",
+  };
+
+  function betterSlotFor(districtId) {
+    let best = null;
+    TIME_SLOTS.forEach((slot) => {
+      const r = computeRisk(districtId, slot.id);
+      if (!best || r.composite < best.risk) best = { slot: slot.name, risk: r.composite };
+    });
+    return best.slot;
+  }
+
+  /* ---------------- Populate selects ---------------- */
+
+  function fillSelect(select, items, labelKey, valueKey) {
+    select.innerHTML = items
+      .map((it) => `<option value="${it[valueKey]}">${it[labelKey]}</option>`)
+      .join("");
+  }
+
+  const districtSelects = ["quickDistrict", "riskDistrict", "travelDistrict"];
+  const slotSelects = ["quickTimeSlot", "riskTimeSlot", "travelTimeSlot"];
+
+  districtSelects.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) fillSelect(el, DISTRICTS, "name", "id");
+  });
+  slotSelects.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) fillSelect(el, TIME_SLOTS, "name", "id");
+  });
+  // default pick something with visible variety
+  document.getElementById("riskDistrict").value = 7;
+  document.getElementById("travelDistrict").value = 7;
+
+  /* ---------------- Navigation ---------------- */
+
+  const navItems = document.querySelectorAll(".nav__item");
+  const pages = document.querySelectorAll(".page");
+  const sidebar = document.getElementById("sidebar");
+  const menuToggle = document.getElementById("menuToggle");
+
+  const overlay = document.createElement("div");
+  overlay.className = "sidebar-overlay";
+  document.body.appendChild(overlay);
+
+  function goToPage(pageId) {
+    navItems.forEach((n) => n.classList.toggle("is-active", n.dataset.page === pageId));
+    pages.forEach((p) => p.classList.toggle("is-active", p.id === "page-" + pageId));
+    sidebar.classList.remove("is-open");
+    overlay.classList.remove("is-active");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  navItems.forEach((btn) => btn.addEventListener("click", () => goToPage(btn.dataset.page)));
+  document.querySelectorAll("[data-goto]").forEach((btn) => {
+    btn.addEventListener("click", () => goToPage(btn.dataset.goto));
+  });
+
+  menuToggle.addEventListener("click", () => {
+    sidebar.classList.toggle("is-open");
+    overlay.classList.toggle("is-active");
+  });
+  overlay.addEventListener("click", () => {
+    sidebar.classList.remove("is-open");
+    overlay.classList.remove("is-active");
+  });
+
+  /* ---------------- Animated counters ---------------- */
+
+  function animateCounters() {
+    document.querySelectorAll(".stat-card__value[data-count]").forEach((el) => {
+      const target = parseInt(el.dataset.count, 10);
+      if (el.dataset.done) return;
+      el.dataset.done = "1";
+      const duration = 1400;
+      const start = performance.now();
+      function tick(now) {
+        const p = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(target * eased).toLocaleString();
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    });
+  }
+  animateCounters();
+
+  /* ---------------- Ticker ---------------- */
+
+  const ticker = document.getElementById("ticker");
+  let tickIdx = 0;
+  function renderTick() {
+    ticker.innerHTML = `<span>${SCANNER_FEED[tickIdx % SCANNER_FEED.length]}</span>`;
+    tickIdx++;
+  }
+  renderTick();
+  setInterval(renderTick, 3600);
+
+  /* ---------------- Risk Analysis page ---------------- */
+
+  const riskEmptyState = document.getElementById("riskEmptyState");
+  const riskResultBody = document.getElementById("riskResultBody");
+
+  function runRiskAnalysis(districtId, slotId) {
+    const district = DISTRICTS.find((d) => d.id === Number(districtId));
+    const slot = TIME_SLOTS.find((s) => s.id === slotId);
+    const result = computeRisk(Number(districtId), slotId);
+
+    riskEmptyState.hidden = true;
+    riskResultBody.hidden = false;
+
+    const badge = document.getElementById("riskBadge");
+    badge.className = "risk-badge level-" + result.level;
+    document.getElementById("riskLevelText").textContent = LEVEL_LABEL[result.level];
+    document.getElementById("riskDistrictName").textContent = district.name;
+    document.getElementById("riskSlotName").textContent = slot.name;
+    document.getElementById("riskCrimeCount").textContent = result.crimeCount.toLocaleString();
+    document.getElementById("riskSafetyScore").textContent = result.safetyScore;
+
+    requestAnimationFrame(() => {
+      document.getElementById("riskScoreFill").style.width = result.safetyScore + "%";
+    });
+
+    const chipRow = document.getElementById("riskTopCrimes");
+    chipRow.innerHTML = result.topCrimes.map((c) => `<span class="chip">${c}</span>`).join("");
+  }
+
+  document.getElementById("analyzeRiskBtn").addEventListener("click", () => {
+    const d = document.getElementById("riskDistrict").value;
+    const s = document.getElementById("riskTimeSlot").value;
+    runRiskAnalysis(d, s);
+  });
+
+  document.getElementById("quickAnalyzeBtn").addEventListener("click", () => {
+    const d = document.getElementById("quickDistrict").value;
+    const s = document.getElementById("quickTimeSlot").value;
+    document.getElementById("riskDistrict").value = d;
+    document.getElementById("riskTimeSlot").value = s;
+    goToPage("risk-analysis");
+    runRiskAnalysis(d, s);
+  });
+
+  /* ---------------- Safe Travel page ---------------- */
+
+  const travelEmptyState = document.getElementById("travelEmptyState");
+  const travelResultBody = document.getElementById("travelResultBody");
+
+  function runTravelRecommendation(districtId, slotId) {
+    const district = DISTRICTS.find((d) => d.id === Number(districtId));
+    const slot = TIME_SLOTS.find((s) => s.id === slotId);
+    const result = computeRisk(Number(districtId), slotId);
+
+    travelEmptyState.hidden = true;
+    travelResultBody.hidden = false;
+
+    const badge = document.getElementById("travelVerdictBadge");
+    badge.className = "travel-verdict__badge level-" + result.level;
+    badge.textContent = LEVEL_LABEL[result.level];
+    document.getElementById("travelVerdictText").textContent =
+      `${district.name} during ${slot.name.split(" (")[0]} carries a ${LEVEL_LABEL[result.level].toLowerCase()} profile based on historical incident data.`;
+
+    document.getElementById("travelTips").innerHTML = SAFETY_TIPS[result.level]
+      .map((t) => `<li>${t}</li>`).join("");
+
+    document.getElementById("travelAltSlot").textContent = betterSlotFor(Number(districtId));
+    document.getElementById("travelAdvice").textContent = TRAVEL_ADVICE[result.level];
+  }
+
+  document.getElementById("getRecommendationBtn").addEventListener("click", () => {
+    const d = document.getElementById("travelDistrict").value;
+    const s = document.getElementById("travelTimeSlot").value;
+    runTravelRecommendation(d, s);
+  });
+
+  /* ---------------- Analytics charts (lightweight, no libraries) ---------------- */
+
+  function buildAnalyticsData() {
+    const byDistrict = DISTRICTS.map((d) => ({
+      name: d.name.split("—")[1].trim(),
+      value: Math.round(400 + DISTRICT_DANGER[d.id] * 3200),
+    })).sort((a, b) => b.value - a.value).slice(0, 8);
+
+    const bySlot = TIME_SLOTS.map((s) => ({
+      name: s.name.split(" (")[0],
+      value: Math.round(TIME_MULTIPLIER[s.id] * 4200 + 400),
+    }));
+
+    const rand = seedFromString("crime-types-dist");
+    const byType = CRIME_TYPES.map((t) => ({ name: t, value: rangeFromSeed(rand, 400, 3200) }))
+      .sort((a, b) => b.value - a.value);
+
+    const months = ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+    const trandRand = seedFromString("monthly-trend");
+    const trend = months.map((m) => ({ name: m, value: rangeFromSeed(trandRand, 16000, 24000) }));
+
+    return { byDistrict, bySlot, byType, trend };
+  }
+
+  const analytics = buildAnalyticsData();
+
+  function renderBarV(containerId, data) {
+    const el = document.getElementById(containerId);
+    const max = Math.max(...data.map((d) => d.value));
+    el.innerHTML = data.map((d) => `
+      <div class="bar-v">
+        <span class="bar-v__value">${d.value}</span>
+        <div class="bar-v__fill" data-h="${(d.value / max) * 100}"></div>
+        <span class="bar-v__label">${d.name}</span>
+      </div>
+    `).join("");
+    requestAnimationFrame(() => {
+      el.querySelectorAll(".bar-v__fill").forEach((f) => { f.style.height = f.dataset.h + "%"; });
+    });
+  }
+
+  function renderBarH(containerId, data) {
+    const el = document.getElementById(containerId);
+    const max = Math.max(...data.map((d) => d.value));
+    el.innerHTML = data.map((d) => `
+      <div class="bar-h">
+        <span class="bar-h__label">${d.name}</span>
+        <div class="bar-h__track"><div class="bar-h__fill" data-w="${(d.value / max) * 100}"></div></div>
+        <span class="bar-h__value">${d.value.toLocaleString()}</span>
+      </div>
+    `).join("");
+    requestAnimationFrame(() => {
+      el.querySelectorAll(".bar-h__fill").forEach((f) => { f.style.width = f.dataset.w + "%"; });
+    });
+  }
+
+  const DONUT_COLORS = ["#5b8def", "#9b5cf6", "#34d399", "#f5b942", "#f2586b", "#5ec8f2", "#c084fc", "#fb923c", "#4ade80", "#f472b6"];
+
+  function renderDonut(svgId, legendId, data) {
+    const svg = document.getElementById(svgId);
+    const legend = document.getElementById(legendId);
+    const total = data.reduce((s, d) => s + d.value, 0);
+    const cx = 80, cy = 80, r = 62, innerR = 38;
+    let angle = -90;
+    let paths = "";
+
+    data.forEach((d, i) => {
+      const slice = (d.value / total) * 360;
+      const a0 = (angle * Math.PI) / 180;
+      const a1 = ((angle + slice) * Math.PI) / 180;
+      const x0 = cx + r * Math.cos(a0), y0 = cy + r * Math.sin(a0);
+      const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+      const ix0 = cx + innerR * Math.cos(a0), iy0 = cy + innerR * Math.sin(a0);
+      const ix1 = cx + innerR * Math.cos(a1), iy1 = cy + innerR * Math.sin(a1);
+      const largeArc = slice > 180 ? 1 : 0;
+      paths += `<path d="M${ix0} ${iy0} L${x0} ${y0} A${r} ${r} 0 ${largeArc} 1 ${x1} ${y1} L${ix1} ${iy1} A${innerR} ${innerR} 0 ${largeArc} 0 ${ix0} ${iy0} Z" fill="${DONUT_COLORS[i % DONUT_COLORS.length]}" opacity="0.92"/>`;
+      angle += slice;
+    });
+
+    svg.innerHTML = paths;
+    legend.innerHTML = data.map((d, i) => `
+      <div class="legend-item">
+        <span class="legend-item__dot" style="background:${DONUT_COLORS[i % DONUT_COLORS.length]}"></span>
+        <span>${d.name}</span>
+        <strong>${Math.round((d.value / total) * 100)}%</strong>
+      </div>
+    `).join("");
+  }
+
+  function renderLineChart(svgId, data) {
+    const svg = document.getElementById(svgId);
+    const w = 600, h = 200, pad = 20;
+    const max = Math.max(...data.map((d) => d.value));
+    const min = Math.min(...data.map((d) => d.value));
+    const stepX = (w - pad * 2) / (data.length - 1);
+
+    const points = data.map((d, i) => {
+      const x = pad + i * stepX;
+      const y = h - pad - ((d.value - min) / (max - min || 1)) * (h - pad * 2);
+      return [x, y];
+    });
+
+    const linePath = points.map((p, i) => (i === 0 ? "M" : "L") + p[0] + " " + p[1]).join(" ");
+    const areaPath = linePath + ` L${points[points.length - 1][0]} ${h - pad} L${points[0][0]} ${h - pad} Z`;
+
+    const dots = points.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="#0b1226" stroke="#5b8def" stroke-width="2"><title>${data[i].name}: ${data[i].value}</title></circle>`).join("");
+    const labels = data.map((d, i) => `<text x="${points[i][0]}" y="${h - 2}" font-size="9" fill="#5c6480" text-anchor="middle" font-family="JetBrains Mono, monospace">${d.name}</text>`).join("");
+
+    svg.innerHTML = `
+      <defs>
+        <linearGradient id="lineFade" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#9b5cf6" stop-opacity="0.35"/>
+          <stop offset="100%" stop-color="#9b5cf6" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="lineStroke" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#5b8def"/>
+          <stop offset="100%" stop-color="#9b5cf6"/>
+        </linearGradient>
+      </defs>
+      <path d="${areaPath}" fill="url(#lineFade)" />
+      <path d="${linePath}" fill="none" stroke="url(#lineStroke)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      ${dots}
+      ${labels}
+    `;
+  }
+
+  function riskColor(v) {
+    // v: 0-1 -> blue to purple to red
+    if (v < 0.4) return `rgba(91,141,239,${0.25 + v})`;
+    if (v < 0.7) return `rgba(155,92,246,${0.35 + v * 0.5})`;
+    return `rgba(242,88,107,${0.4 + v * 0.5})`;
+  }
+
+  function renderHeatmap(containerId) {
+    const el = document.getElementById(containerId);
+    let html = "";
+    DISTRICTS.slice(0, 15).forEach((d) => {
+      TIME_SLOTS.forEach((s) => {
+        const r = computeRisk(d.id, s.id);
+        html += `<div class="heat-cell" style="background:${riskColor(r.composite)}" title="${d.name} · ${s.name}">${d.id}</div>`;
+      });
+    });
+    el.innerHTML = html;
+    el.style.gridTemplateColumns = `repeat(${TIME_SLOTS.length}, 1fr)`;
+  }
+
+  renderBarV("chartByDistrict", analytics.byDistrict);
+  renderBarH("chartByTimeSlot", analytics.bySlot);
+  renderDonut("chartByType", "chartByTypeLegend", analytics.byType.slice(0, 6));
+  renderLineChart("chartTrend", analytics.trend);
+  renderHeatmap("heatmap");
+
+  /* ---------------- Prime first risk view so page never feels empty ---------------- */
+  // Leaving Risk / Travel pages in their empty state by default is intentional —
+  // it invites the first action rather than pre-filling a result nobody asked for.
+
+})();
+
+</script>
+</body>
+</html>
